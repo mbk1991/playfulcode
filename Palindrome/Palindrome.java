@@ -84,4 +84,11 @@ public class Palindrome{
          }
         return true;
     }
+    
+    
+    private void testMethod(){
+        Palindrome.class
+
+
+    }
 }

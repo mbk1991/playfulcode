@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        #mouseInfo {
+        position: absolute;
+        width: 100px;
+        height: 30px;
+        background-color: #ffffff;
+        pointer-events: none; /* 클릭 이벤트 방해 방지 */
+        transition: transform 0.05s linear;
+    }
+
+    #pointInfo {
+        position: absolute;
+        width: 100px;
+        height: 30px;
+        background-color: transparent;
+        pointer-events: none; /* 클릭 이벤트 방해 방지 */
+        transition: transform 0.05s linear;
+    }
+    </style>
+</head>
+<body>
+    <div>
+        <canvas id="coordinateCanvas" height="600" width="600">    
+            
+        </canvas>
+    </div>
+    <div id="mouseInfo"></div>
+
+    <div style="padding-top:20px">
+        <h1>좌표가 사각형 안에 있는지 판단하기</h1>
+        <ol>
+            <li>좌표에 사각형의 4개 꼭지점을 클릭한다.</li>
+            *사각형의 내각이 180도 이상이면 안 된다.
+            <li>사각형의 내부/외부를 클릭하여 좌표가 사각형의 안에 있는지 판단한다.</li>
+            *내부:<span style="color:green">green</span>, 외부:<span style="color:red">red</span>
+        </ol>
+
+        <h1>구현 로직</h1>
+        <ol>
+            <li>클릭한 좌표 지점을 T라 한다.</li>
+            <li>사각형의 각 꼭지점마다 순회한다</li>
+            <ol>
+                <li>기준 꼭지점의 인접 꼭지점을 각각 A, B라 한다.</li>
+                <li>기준 꼭지점을 원점으로 간주하여 A,B,T의 좌표를 보정한다.</li>
+                <li>벡터T를 벡터A와 벡터B의 합으로 표현한다.</li>
+                <li>vec{T} = t * vec{A} + s * vec{B}</li>
+                <li>t와 s를 구한다.</li>
+                <li>t 또는 s가 음수이면 false를 반환한다.</li>
+                *역벡터가 더해진 것으로 간주하여 범위 바깥에 있는 것으로 볼 수 있다.
+            </ol>
+            <li>사각형의 4개의 꼭지점을 모두 확인하면 true를 반환한다.</li>
+        </ol>
+    </div>
+
+
+</body>
+<script>
+    const canvas = document.querySelector("#coordinateCanvas");
+    const ctx = canvas.getContext("2d");
+    const gridSize = 10; // 10:1 비율
+    const gridSizeX = 600;
+    const gridSizeY = 600;
+    const rectanglePoint = [];
+    let rectCompleted = false;
+    let targetPointSet = false;
+    let targetIdx = 1;
+
+    //1. 그리드 그리기
+    ctx.beginPath();
+    for(let i=0; i<=gridSizeX; i+=gridSize){
+        drawVertical(i);
+        drawHorizon(i);
+    }
+    ctx.strokeStyle="gray";
+    ctx.lineWidth=0.5;
+    
+    ctx.closePath();
+    ctx.stroke();
+
+
+    //2.기준 축 그리기
+    ctx.beginPath();
+    drawVertical(gridSizeX / 2);
+    drawHorizon(gridSizeY / 2);
+    ctx.strokeStyle="red";
+    ctx.lineWidth=0.5;
+    ctx.closePath();
+    ctx.stroke();
+
+
+    function drawHorizon(y){
+        ctx.moveTo(0, y);
+        ctx.lineTo(gridSizeX, y);
+    }
+
+    function drawVertical(x){
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, gridSizeY);
+    }
+
+    const mouseInfo = document.querySelector("#mouseInfo");
+    canvas.addEventListener("mousemove", (e)=>{
+        let x = e.offsetX;
+        let y = e.offsetY;
+
+        const p = new Point(x,y);
+
+        mouseInfo.innerHTML = "x: " + p.coordiX() 
+                            + "y: " + p.coordiY();
+
+        mouseInfo.style.left = x+30+"px";
+        mouseInfo.style.top = y+10+"px";
+    });
+
+    canvas.addEventListener("click",(e)=>{
+
+        let mouseX = e.offsetX;
+        let mouseY = e.offsetY;
+
+        if(rectanglePoint.length < 4){
+            const p = new Point(mouseX, mouseY);
+            rectanglePoint.push(p);
+            makePointInfo(p, `Point${rectanglePoint.length}`);
+            p.drawPoint(2,"black");
+        }
+        if(!rectCompleted && rectanglePoint.length == 4){
+            drawRect();
+            return;
+        }
+        if(rectCompleted){
+            //pointer
+            const targetPoint = new Point(mouseX, mouseY);
+            // makePointInfo(targetPoint,`Target${targetIdx++}`)
+            
+
+            let inCheck = isIn(targetPoint);
+
+            let color = 'red';
+            if(inCheck){
+                color = 'green';
+            }
+            targetPoint.drawPoint(3, color);
+
+            console.log(inCheck);
+        }
+
+    });
+
+
+    function makePointInfo(p,name){
+        let pointInfoBox = document.createElement("div");
+        pointInfoBox.id = "pointInfo";
+        pointInfoBox.textContent =name +  "("+ p.coordiX() +"," + p.coordiY() + ")";
+        document.body.appendChild(pointInfoBox);
+        pointInfoBox.style.left = p.x+30+"px";
+        pointInfoBox.style.top = p.y+10+"px";
+    }
+
+
+    function drawRect(){
+        ctx.beginPath();
+        for(let i=0; i<4; i++){
+
+            if(i!=3){
+                ctx.moveTo(rectanglePoint[i].x, rectanglePoint[i].y);
+                ctx.lineTo(rectanglePoint[i+1].x, rectanglePoint[i+1].y);
+            }else{
+                ctx.moveTo(rectanglePoint[i].x, rectanglePoint[i].y);
+                ctx.lineTo(rectanglePoint[0].x, rectanglePoint[0].y);
+            }
+        }
+        ctx.strokeStyle="blue";
+        ctx.closePath();
+        ctx.stroke();
+        rectCompleted = true;
+    }
+
+
+    function drawTargetPoint(x, y, radius, color){
+        ctx.beginPath();
+        ctx.arc(x, y, 10, 0, Math.PI * radius);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.closePath();
+    }
+
+
+class Point{
+    constructor(x,y){
+        this.x = x;
+        this.y = y;
+    }
+    coordiX(){
+        // console.log("mouseX = " + this.x);
+        // console.log("coordiX = " + (this.x - gridSizeX/2));
+        // console.log("");
+        return this.x - gridSizeX/2;
+    }
+    coordiY(){
+        // console.log("mouseY = " + this.y);
+        // console.log("coordiY = " + (this.y - gridSizeY/2));
+        // console.log("");
+        return gridSizeY/2 - this.y;
+    }
+
+    drawPoint(radius, color){
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.closePath();
+    }
+}
+
+class CoordiPoint{
+    constructor(x,y){
+        this.x = x;
+        this.y = y;
+    }
+}
+
+
+function isIn(target){
+
+    let zeroPoint;
+    let pointA;
+    let pointB;
+
+    //객체 복사하여 사용
+    for(let i=0; i<4; i++){
+
+        // console.log(">>>>point"+(i+1) + ": ")
+
+        zeroPoint = new Point(rectanglePoint[i].x, rectanglePoint[i].y);
+
+        pointA = (i!=0)? new Point(rectanglePoint[i-1].x, rectanglePoint[i-1].y)
+                        :new Point(rectanglePoint[3].x,rectanglePoint[3].y) ;
+
+        pointB = new Point(rectanglePoint[(i+1)%4].x, rectanglePoint[(i+1)%4].y) ;
+   
+
+        //zeroPoint를 이용하여 pointA와 pointB, target을 영점 보정하여 벡터 성분 표기
+        //영점 보정을 위한 x와 y, 여기서 부터는 화면의 x,y가 아닌 좌표의 x,y를 사용
+        const diffX = -zeroPoint.coordiX();
+        const diffY = -zeroPoint.coordiY();
+
+        let coordiA = new CoordiPoint(pointA.coordiX() + diffX,
+                                    pointA.coordiY() + diffY);
+
+        let coordiB = new CoordiPoint(pointB.coordiX() + diffX,
+                                    pointB.coordiY() + diffY);
+
+        let coordiTarget = new CoordiPoint(target.coordiX() + diffX,
+                                            target.coordiY() + diffY);
+
+        /*
+        벡터의 분해를 이용하여
+        벡터P = t벡터A + s벡터B 로 표현
+        연립 1차방정식으로 t와 s를 구해서 부호가 -라면 점이 바깥에 있는것으로 판단한다.
+        부호가 -라면 역벡터이므로 target인 점 P는 벡터 A와 벡터 B의 사이에 있지 않다.
+        
+        백터A = t(ax,ay)
+        벡터B = s(bx,by)
+        벡터T = 벡터A + 벡터B
+               (t*ax + s*bx, t*ay + s*by) = (x,y)
+
+        t*ax + s*bx = x
+        t*ay + s*by = y
+
+        s를 구하면
+        t*ax*ay + s*bx*ay = x*ay
+        t*ay*ax + s*by*ax = y*ax
+        s(bx*ay - by*ax) = x*ay - y*ax
+        s = (x*ay - y*ax) / (bx*ay - by*ax)
+
+        t를 구하면
+        t*ax*by + s*bx*by = x*by
+        t*ay*bx + s*by*bx = y*bx
+        t(ax*by - ay*bx) = x*by - y*bx
+        t = (x*by - y*bx) / (ax*by - ay*bx)
+        */
+
+        let ax,ay,bx,by,tx,ty,s,t;
+        ax = coordiA.x;
+        ay = coordiA.y;
+        bx = coordiB.x;
+        by = coordiB.y;
+        x = coordiTarget.x;
+        y = coordiTarget.y;
+
+        s = (x*ay - y*ax) / (bx*ay - by*ax);
+        t = (x*by - y*bx) / (ax*by - ay*bx);
+
+        // console.log("ax= " + ax );
+        // console.log("ay= " + ay );
+        // console.log("bx= " + bx );
+        // console.log("by= " + by );
+        // console.log("x= " + x );
+        // console.log("y= " + y );
+        // console.log("s= " + s );
+        // console.log("t= " + t +"\n");
+        // console.log(" ");
+
+        if( s < 0 || t < 0){
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
+
+
+function zeroPointAdjst(a,b,target){
+
+}
+
+
+
+</script>
+</html>
