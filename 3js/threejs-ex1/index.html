@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three.js 3D 맵 로드</title>
+    <style>
+        body { margin: 0; overflow: hidden; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "../three.js-master-new/build/three.module.js",
+                "three/addons/": "./jsm/"
+            }
+        }
+    </script>
+    <script type="module">
+        // import * as THREE from 'https://unpkg.com/three@latest/build/three.module.js';
+        // import { GLTFLoader } from 'https://unpkg.com/three@latest/examples/jsm/loaders/GLTFLoader.js';
+        // import { OrbitControls } from 'https://unpkg.com/three@latest/examples/jsm/controls/OrbitControls.js';
+        import * as THREE from '../three.js-master-new/build/three.module.js';
+        import { OrbitControls } from '../three.js-master-new/examples/jsm/controls/OrbitControls.js';
+        import { FBXLoader } from '/../three.js-master-new/examples/jsm/loaders/FBXLoader.js';
+        import { CapsuleGeometry } from '../three.js-master-new/src/geometries/CapsuleGeometry.js';
+        import { FontLoader } from '/../three.js-master-new/examples/jsm/loaders/FontLoader.js';
+        import { SVGLoader } from '/../three.js-master-new/examples/jsm/loaders/SVGLoader.js';
+        import { TextureLoader } from '/../three.js-master-new/src/loaders/TextureLoader.js';
+
+        // 1️⃣ Three.js 기본 장면 설정
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // 2️⃣ 빛 추가
+        const light1 = new THREE.DirectionalLight(0xffffff, 1);
+        light1.position.set(0, 500, 500);
+        scene.add(light1);
+
+        const light2 = new THREE.HemisphereLight( 0xffffff, 0xffffff, 1 ); // // 그림자 없는 색감만 있는 라이트 객체
+        light2.position.set( 0, 10, 0 );
+        light2.castShadow = true;
+        scene.add(light2);
+
+
+        const axesHelper = new THREE.AxesHelper(5);
+        scene.add(axesHelper);
+
+        const gridHelper = new THREE.GridHelper(100,100);
+        scene.add(gridHelper);
+
+
+        const fbxLoader = new FBXLoader();
+        fbxLoader.load(
+            '../static/IGCC_20231103-1.FBX',
+            (object) => {
+                object.scale.set(0.005, 0.005, 0.005);
+                object.position.set(146, 0, -90);
+                object.transparent = true;
+                object.rotation.x = -90 * ( Math.PI / 180 );
+                object.rotation.z = -180 * ( Math.PI / 180 );
+                scene.add(object);
+            },
+            (error) => {
+                console.log(error)
+            }
+        )
+
+
+
+        // 3️⃣ 3D 맵 (GLTF 모델) 로드
+        // const loader = new GLTFLoader();
+        // loader.load(
+        //     'https://threejs.org/examples/models/gltf/Forest/Forest.gltf', // 샘플 3D 맵
+        //     function (gltf) {
+        //         scene.add(gltf.scene);
+        //         gltf.scene.position.set(0, -1, 0);
+        //     },
+        //     function (xhr) { console.log(`로드 중... ${((xhr.loaded / xhr.total) * 100).toFixed(2)}% 완료`); },
+        //     function (error) { console.error('로딩 오류:', error); }
+        // );
+
+        // 4️⃣ 카메라 컨트롤 추가 (마우스로 이동 가능)
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true; // 부드러운 감속 효과
+
+        camera.position.set(0, 2, 5);
+
+        // 5️⃣ 애니메이션 루프
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // 6️⃣ 창 크기 조절 대응
+        window.addEventListener('resize', () => {
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+        });
+
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        const plane = new THREE.Plane(new THREE.Vector3(0,1,0),0);
+
+        document.addEventListener('pointerdown',(e)=>{
+            console.log(e);
+
+            mouse.x = (event.clientX / window.innerWidgh) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersectPoint = new THREE.Vector3();
+            raycaster.ray.intersectPlane(plane, intersectPoint);
+
+            if(intersectPoint){
+                console.log('좌표', intersectPoint);
+            }
+
+            drawMarker("test", 0,0,0, "testName");
+
+        });
+
+
+        let markers = [];
+        const textureLoader = new TextureLoader();
+        function drawMarker(dkey, x, y, z, name) {
+            const criticalTexture = textureLoader.load('../resources/img/helmet.png');
+
+            const positionListForLine = [
+                { x: x, y: y - 1, z: z }, // start
+                { x: x, y: y + 70, z: z } // end
+            ];
+
+            // 큐브(아이콘)
+            
+            const cube = _generateCube(criticalTexture);
+            cube.name = dkey;
+            cube.position.set(x, y - 1, z);
+            cube.rotation.y = -90 * ( Math.PI / 180 );
+            scene.add(cube);
+
+            markers.push( cube );
+
+            // 텍스트(아이콘상단)
+            const textMesh = _getCanvasMesh('작업자', 'green');
+            // textMesh.name = 'text_' + wnum;
+            textMesh.name = dkey;
+            textMesh.position.set(x, y + 2, z);
+            scene.add(textMesh);
+
+            markers.push( textMesh );
+
+            // 아이콘과 설명을 이어주는 선
+            const line = _generateLine(positionListForLine, 'green');
+            line.name = dkey;
+            images.push(line);
+            scene.add(line);
+
+            // markers.push( line );
+
+            // 설명
+            const textNameMesh = _getCanvasMesh(name , 'green');
+            textNameMesh.name = dkey;
+            textNameMesh.position.set(x, y + 70, z);
+            scene.add(textNameMesh);
+
+            markers.push( textNameMesh );
+
+    }
+
+    function _generateCube(texture, sizeSet = [.1, 3, 3]) {
+        const [a, b, c] = sizeSet;
+
+        const geometry = new THREE.BoxGeometry(a, b, c);
+        const material = new THREE.MeshBasicMaterial( texture ? { map: texture } : { color: 0xffffff });
+        const cube = new THREE.Mesh( geometry, material );
+
+        return cube;
+    }
+
+   
+
+    </script>
+</body>
+</html>

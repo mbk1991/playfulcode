@@ -1,0 +1,155 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Gamedev Canvas Workshop</title>
+    <style>
+      * {
+        padding: 0;
+        margin: 0;
+      }
+      canvas {
+        background: #eee;
+        display: block;
+        margin: 0 auto;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="myCanvas" width="480" height="320"></canvas>
+
+    <script>
+        
+        const canvas = document.querySelector("#myCanvas");
+        const ctx = canvas.getContext("2d");
+        let play = true;
+
+        const ball = {
+            x: canvas.width / 2,
+            y: canvas.height - 30,
+            radius: 2,
+            dx: 0,
+            dy: -2,
+            color: "#0095DD",
+            speed:0
+        };
+
+        const paddleHeight = 3;
+        const STOP = 0;
+        const RIGHT = 1;
+        const LEFT = 2;
+        const paddle = {
+            height: paddleHeight,
+            width: 75,
+            bottomGap: 20,
+            x: (canvas.width - paddleHeight) / 2,
+            color: "#0095DD",
+            dx: 5,
+            keyStatus: STOP, // 0:stop, 1:right, 2:left
+        }
+
+        let paddleDirection = 0; //1:right, 2:left
+        document.addEventListener("keydown", (e)=>{
+            switch(e.key){
+                case "ArrowRight": paddle.keyStatus = RIGHT; break;
+                case "ArrowLeft": paddle.keyStatus = LEFT; break;
+            }
+
+            if(paddle.dx === 0 || paddle.dx+paddle.width === canvas.width) paddle.keyStatus = STOP;
+        });
+
+        // document.addEventListener("keyup", (e)=>{
+        //     switch(e.key){
+        //         case "ArrowLeft": paddle.leftPressed = false; break;
+        //         case "ArrowRight": paddle.rightPressed = false; break;
+        //     }
+        // });
+
+
+
+        function drawBall(){
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, 10, 0, Math.PI * ball.radius);
+            ctx.fillStyle = ball.color;
+            ctx.fill();
+            ctx.closePath();
+       
+            if((ball.x + ball.dx) >= (canvas.width - ball.radius) || (ball.x + ball.dx) <= (0 + ball.radius)){
+                ball.dx = -ball.dx;
+                ball.color = makeColor();
+            }
+            if((ball.y + ball.dy) <= (0 + ball.radius)){
+                ball.dy = -ball.dy;
+                ball.color = makeColor();
+            }
+
+            //paddle touch
+            if((ball.y - ball.radius >= canvas.height - paddle.height - paddle.bottomGap)
+            && (paddle.x <= ball.x && ball.x <= paddle.x+paddle.width)){
+                    ball.dy = -ball.dy;
+                    ball.color = makeColor();
+
+                    if(paddle.keyStatus === RIGHT){
+                        ball.dx = ball.dx + paddle.dx/2;
+                    }else{
+                        ball.dx = ball.dx - paddle.dx/2;
+                    }
+
+                    ball.speed += 0.1;
+                    
+                }
+
+            //game over
+            if(ball.y + ball.dy >= (canvas.height - ball.radius)){
+                play = false;
+            }
+
+            ball.x+=ball.dx;
+            ball.y+=ball.dy;
+        }
+
+        function drawPaddle(){
+            ctx.beginPath();
+            ctx.rect(paddle.x, canvas.height - paddle.height - paddle.bottomGap, paddle.width, paddle.height);
+            ctx.fillStyle = paddle.color;
+            ctx.fill();
+            ctx.closePath();
+
+            switch(paddle.keyStatus){
+                case RIGHT: 
+                    if(paddle.x + paddle.dx <= canvas.width - paddle.width){
+                        paddle.x += paddle.dx;
+                    }
+                    break;
+                case LEFT: 
+                    if(0<= paddle.x - paddle.dx){
+                        paddle.x -= paddle.dx;
+                    }
+                    break;
+            }
+        }
+
+
+        function draw(){
+            if(play){
+                ctx.clearRect(0,0, canvas.width, canvas.height);
+                drawBall();
+                drawPaddle();
+            }
+
+
+        }
+ 
+        function makeColor(){
+            let rand = Math.floor(Math.random() * Math.pow(2,24));
+            console.log("#" + rand.toString(16));
+            return "#" + rand.toString(16);
+        }
+        
+
+        setInterval(draw, 10);
+        
+
+    </script>
+  </body>
+</html>

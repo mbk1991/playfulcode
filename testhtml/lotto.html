@@ -1,0 +1,59 @@
+<!DOCTYPE html leng="ko">
+<html>
+    <head>
+        <meta charset="UTF-8">
+    </head>
+    <body>
+        <h3>랜덤 숫자</h3>
+        <div id="random"></div>
+        <br>
+    </body>
+</html>
+
+<script>
+    document.addEventListener("DOMContentLoaded",function(){
+
+
+        const lottoSet = new Set();
+        while(lottoSet.size < 6){
+            lottoSet.add(generateOneRandomNo());
+        }
+
+        //값 표출
+        document.querySelector("#random").innerHTML = getText(lottoSet);
+
+    });
+
+    function getMaxNo(i){
+        let no = 1;
+        while(i > 0){
+            no *= 2;
+            i--;
+        }
+        return no;
+    }
+
+    function generateOneRandomNo(){
+         //난수 생성
+         const array = new Uint8Array(1);
+        window.crypto.getRandomValues(array);
+
+        //난수 세팅
+        let myRandomNo;
+        for (const num of array) {  
+             myRandomNo = num;
+        }
+
+        //1~45범위로 스케일링
+        let maxNo = getMaxNo(8) -1;
+        myRandomNo = Math.floor((myRandomNo*45) / maxNo + 1);
+        return myRandomNo;
+        
+    }
+
+    function getText(set){
+        const arr = Array.from(set).sort(function(a,b){return a-b;});
+        return arr.join(" ");
+    }
+
+</script>

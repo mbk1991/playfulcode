@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title> ThreeJS Practice</title>
+    </head>
+    <body>
+
+    </body>
+</html>
+
+<script type="module">
+    // import * as THREE from 'https://cdn.jsdelivr.net/npm/three/build/three.module.js';
+    import * as THREE from '../three.js-master-new/build/three.module.js';
+    import {OrbitControls} from '../three.js-master-new/examples/jsm/controls/OrbitControls.js';
+    import * as TWEEN from '../three.js-master-new/examples/jsm/libs/tween.module.js';
+    // import WebGL from 'three/addons/capabilities/WebGL.js';
+
+ 
+    //renderer, scene, camera
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize( window.innerWidth, window.innerHeight);
+    document.body.appendChild(
+        renderer.domElement
+    );
+    const scene  = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(100,  //FOV(Field of View, 시야각))
+                                            window.innerWidth / window.innerHeight, //aspect ratio(종횡비)
+                                            0.1, //near 절단면 : near 값보다 가까우면 렌더링 하지 않음
+                                            1000 //far 절단면 : far 값보다 멀면 렌더링 하지 않음
+                                            ); 
+    camera.position.set(0,0,30);
+    // camera.position.x = 0;
+    // camera.position.y = 0;
+    // camera.position.z = 10;
+
+
+    let controls = new OrbitControls(camera, renderer.domElement)
+    controls.enableDamping = true
+    // controls.rotateSpeed = 0.2;
+    // controls.minDistance = 100;
+    // controls.maxDistance = 300;
+
+    // // 기본 모드일때
+    // controls.minPolarAngle = 0;
+    // controls.maxPolarAngle = 1.4;
+
+    // controls.minAzimuthAngle = Infinity;
+    // controls.maxAzimuthAngle = Infinity;
+
+    // controls.target.set(0, 1, 0)
+
+    // controls.enablePan = true;
+    // controls.mouseButtons.RIGHT = THREE.MOUSE.PAN;
+
+    //geometry and matrial for cube
+    const boxGeometry = new THREE.BoxGeometry( 2,2,3 );
+    const boxMatrial = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
+    
+    const cube = new THREE.Mesh( boxGeometry, boxMatrial );
+    scene.add(cube);
+
+
+    //con geometry
+    const geometry = new THREE.ConeGeometry( 0.5, 1, 6 ); 
+    const material = new THREE.MeshBasicMaterial( {color: 0xffff00, wireframe: true, wireframeColor: 0x000000} );
+    const cone = new THREE.Mesh(geometry, material ); 
+    cone.rotation.x += -90 * Math.PI / 180;
+    cone.rotation.y += -90 * Math.PI / 180;
+
+    scene.add( cone );
+
+    cone.position.set(10,0,2);
+    console.log(cone);
+
+
+
+    //geometry and matrial for line
+    const lineMatrial = new THREE.LineBasicMaterial( {color:0x0000ff} );
+    const points = [];
+    //canvas에서 라인 그리는 것과 비슷하다.
+    points.push( new THREE.Vector3( -10, 0, 0 ));
+    points.push( new THREE.Vector3( 0, 10, 0 ));
+    points.push( new THREE.Vector3( 10, 0, 0 ));
+    points.push( new THREE.Vector3( 0, -10, 0 ));
+    points.push( new THREE.Vector3( -10, 0, 0 ));
+    const lineGeometry = new THREE.BufferGeometry().setFromPoints ( points );
+
+    const line = new THREE.Line( lineGeometry, lineMatrial );
+    scene.add( line );
+
+    function animate(){
+        window.requestAnimationFrame(animate);
+        renderer.render(scene, camera);
+        // cube.rotation.x += 0.01;
+        cube.rotation.y += 0.03;
+        cube.rotation.z += 0.01;
+        // cube.position.x += 0.01;
+        cube.position.z += 0.01;
+    }
+    animate();
+
+    // if(WebGL.isWebGL2Available()){
+    //     animate();
+    // }else{
+    //     const warning = WebGL.getWebGL2ErrorMessage();
+    //     document.getElementById('container').appendChild(warning);
+    // }
+
+
+
+
+
+// Listen for keyboard events
+let moveSpeed = 2;
+let rotateSpeed = 0.3;
+let zoomSpeed = 0.2;
+function onKeyDown(event) {
+    const keyCode = event.code;
+
+    if (keyCode === 'ArrowUp') {
+        camera.position.y -= moveSpeed; // Move forward
+    } else if (keyCode === 'ArrowDown') {
+        camera.position.y += moveSpeed; // Move backward
+    } else if (keyCode === 'ArrowLeft') {
+        camera.position.x += moveSpeed; // Move left
+    } else if (keyCode === 'ArrowRight') {
+        camera.position.x -= moveSpeed; // Move right
+
+
+    } else if (keyCode === 'KeyW') {
+        tween(true);
+    } else if (keyCode === 'KeyS') {
+        tween(false);
+    } else if (keyCode === 'KeyA') {
+        scene.rotation.z -= rotateSpeed * -30 * Math.PI / 180; // Rotate left
+    } else if (keyCode === 'KeyD') {
+        scene.rotation.z += rotateSpeed * -30 * Math.PI / 180; // Rotate right
+    } else if (keyCode === 'Space'){
+        camera.rotation.set(0, 0, 0);
+        camera.position.set(0, 0, 200);
+
+        scene.rotation.set(90 * (Math.PI / 180), 0, 0);
+        scene.position.set(-150, -50, 0);
+
+
+        // controls.minPolarAngle = 1.4;
+        // controls.maxPolarAngle = Math.PI;
+
+        // controls.minAzimuthAngle = -Math.PI / 2;
+        // controls.maxAzimuthAngle = Math.PI / 2;
+
+
+
+    }
+}
+
+// function tween(inout){ // in - true, out - false
+  
+//   let desiredDistance = inout ? controls.minDistance : controls.maxDistance;
+  
+//   let dir = new THREE.Vector3();
+//   camera.getWorldDirection(dir);
+//   dir.negate();
+//   let dist = controls.getDistance();
+  
+//   new TWEEN.Tween({val: dist})
+//     .to({val: desiredDistance}, 1000)
+//     .onUpdate(val => {
+//       camera.position.copy(controls.target).addScaledVector(dir, val.val);
+//     })
+//     .start();
+// }
+
+
+
+// Add event listener for keydown
+window.addEventListener('keydown', onKeyDown, false);
+
+function tween(isZoomIn) {
+  let desiredDistance = isZoomIn ? 10 : 1000;
+  
+  let dir = new THREE.Vector3();
+  camera.getWorldDirection(dir);
+  dir.negate();  //negate : 부정,  -> 이 벡터의 좌표 부호를 반대로 바꾼다.
+
+  let dist = controls.getDistance();
+  let t = (isZoomIn)? 0.1 : 0.003;
+
+  window.requestAnimationFrame(animate)
+  function animate() {
+    let currentDistance = dist + t * (desiredDistance - dist);
+    camera.position.copy(controls.target).addScaledVector(dir, currentDistance);
+  }
+}
+
+
+</script>

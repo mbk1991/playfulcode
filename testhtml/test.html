@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta lang="kr">
+
+
+        <style>
+            .gridContainer {
+                display: grid;
+                height: 400px;
+                width: 600px;
+                border-style: solid;
+                border-color: blue;
+
+                grid-template-columns: 1fr 1fr 1fr;
+                grid-template-rows: 1fr 1fr;
+
+            }
+
+
+            .gridItem {
+                display:inline;
+                border-style: solid;
+                border-color: green;
+
+            }
+
+
+        </style>
+
+    </head>
+
+
+    <div id="cctv" style="background-color: aqua; width:200px; height:200px; ">
+
+            aaa
+
+    </div>
+
+    <input id="checkboxText" type="checkbox">
+
+
+    <!-- modal -->
+
+    <div class="modal" id="modal">
+
+
+
+    </div>
+
+
+
+
+
+
+    <div class="gridContainer" id="cctvContainer">
+        <div class="gridItem"></div>
+        <div class="gridItem"></div>
+        <div class="gridItem"></div>
+        <div class="gridItem"></div>
+        <div class="gridItem"></div>
+        <!-- <div class="gridItem"></div> -->
+    </div>
+
+
+
+
+</html>
+
+
+
+<script>
+
+
+    document.addEventListener("DOMContentLoaded",function(){
+
+
+        setGrid(1);
+
+
+    });
+
+
+    document.querySelector("#cctv").addEventListener("click",function(){
+
+        alert("!");
+
+    })
+
+
+
+    document.querySelector("#checkboxText").addEventListener("change",function(){
+
+        alert(document.querySelector("#checkboxText").checked);
+
+
+    });
+
+    function checkbox(){
+
+        alert("!");
+    }
+
+
+
+    function setGrid(cnt){
+        document.querySelector("#cctvContainer").style.gridTemplateRows = "repeat(2,1fr)";
+        document.querySelector("#cctvContainer").style.gridTemplateColumns = "repeat(2,1fr)";
+    }
+
+
+
+
+
+</script>
