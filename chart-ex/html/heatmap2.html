@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Time Range on X Axis with amCharts</title>
+  <script src="https://cdn.amcharts.com/lib/4/core.js"></script>
+  <script src="https://cdn.amcharts.com/lib/4/charts.js"></script>
+  <script src="https://cdn.amcharts.com/lib/4/themes/animated.js"></script>
+</head>
+<body>
+  <div id="chartdiv" style="width: 100%; height: 500px;"></div>
+</body>
+
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+<script>
+
+var data;
+var inputData;
+
+document.addEventListener("DOMContentLoaded",function(){
+  getHeatMapData().then(()=>{
+    var options = {
+            series: [
+            {
+              data: inputData
+            }
+          ],
+            chart: {
+            height: 700,
+            type: 'rangeBar',
+          },
+          plotOptions: {
+            bar: {
+              horizontal: true,
+              barHeight: '70%',
+              rangeBarGroupRows: true
+            }
+          },
+          xaxis: {
+            type: 'datetime'
+          },
+          };
+  var chart = new ApexCharts(document.querySelector("#chartdiv"), options);
+  chart.render();
+  });
+
+
+});
+
+function convertChartData(d){
+  let c = [];
+  for(i in d){
+    let o = {};
+    o.x = d[i].id;
+    o.y = [utc_9(new Date(d[i].sTime).getTime()), utc_9(new Date(d[i].eTime).getTime())];
+    o.fillColor = setColor(d[i].batt);
+    c.push(o);
+  }
+
+  console.log("c",c);
+  return c;
+}
+
+
+
+
+async function getHeatMapData() {
+        try {
+            const response = await fetch('http://localhost:9602/tag/aggr/heatmap.do');
+            if (!response.ok) {
+                throw new Error('fail');
+            }
+            const data = await response.json();  
+            console.log("data", data);
+            inputData = convertChartData(data);
+
+            console.log("inputData", inputData);
+        } catch (error) {
+            console.error('error', error);
+            return null; 
+        }
+}
+
+
+
+
+function utc_9(time){
+  return time + (1000 * 60 * 60 * 9);
+}
+
+function setColor(batt){
+  let color;
+  if(batt <= 10){
+    color = '#FF3300';
+  }else if(10 < batt && batt <= 20){
+    color = '#FF6600';
+  }else if(20 < batt && batt <= 30){
+    color = '#FF9900';
+  }else if(30 < batt && batt <= 40){
+    color = '#FFCC00';
+  }else if(40 < batt && batt <= 50){
+    color = '#FFFF00';
+  }else if(50 < batt && batt <= 60){
+    color = '#00BB00';
+  }else if(60 < batt && batt <= 70){
+    color = '#00CC00';
+  }else if(70 < batt && batt <= 80){
+    color = '#00DD00';
+  }else if(80 < batt && batt <= 90){
+    color = '#00EE00';
+  }else if(90 < batt){
+    color = '#00FF00';
+  }
+  return color;
+}
+
+const inputData2 = [
+  { x: "Tag_0000000A", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(100) },
+  { x: "Tag_0000000B", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(90) },
+  { x: "Tag_0000000C", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(80) },
+  { x: "Tag_0000000D", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(70) },
+  { x: "Tag_0000000E", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(60) },
+  { x: "Tag_0000000F", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(50) },
+  { x: "Tag_00000001", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(40) },
+  { x: "Tag_00000002", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(30) },
+  { x: "Tag_00000003", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(20) },
+  { x: "Tag_00000004", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(10) },
+  { x: "Tag_00000005", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(0) },
+  { x: "Tag_00000006", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(90) },
+  { x: "Tag_00000007", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(100) },
+  { x: "Tag_00000008", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(90) },
+  { x: "Tag_00000009", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(80) },
+  { x: "Tag_00000010", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(90) },
+  { x: "Tag_00000011", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(100) },
+  { x: "Tag_00000012", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(90) },
+  { x: "Tag_00000013", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(80) },
+  { x: "Tag_00000014", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(90) },
+  { x: "Tag_00000015", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(100) },
+  { x: "Tag_00000016", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(90) },
+  { x: "Tag_00000017", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(80) },
+  { x: "Tag_00000018", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(90) },
+  { x: "Tag_00000019", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(100) },
+  { x: "Tag_00000020", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(90) },
+  { x: "Tag_00000021", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(80) },
+  { x: "Tag_00000022", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(70) },
+  { x: "Tag_00000023", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(60) },
+  { x: "Tag_00000024", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(50) },
+  { x: "Tag_00000025", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(40) },
+  { x: "Tag_00000026", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(30) },
+  { x: "Tag_00000027", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(20) },
+  { x: "Tag_00000028", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(10) },
+  { x: "Tag_00000029", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(0) },
+  { x: "Tag_00000030", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(90) },
+  { x: "Tag_00000031", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(100) },
+  { x: "Tag_00000032", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(90) },
+  { x: "Tag_00000033", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(80) },
+  { x: "Tag_00000034", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(90) },
+  { x: "Tag_00000035", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(100) },
+  { x: "Tag_00000036", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(90) },
+  { x: "Tag_00000037", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(80) },
+  { x: "Tag_00000038", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(90) },
+  { x: "Tag_00000039", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(100) },
+  { x: "Tag_00000040", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(90) },
+  { x: "Tag_00000041", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(80) },
+  { x: "Tag_00000042", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:59:42").getTime())], value: 100, fillColor: setColor(90) },
+  // { x: "Tag_0000000C", y: [utc_9(new Date("2025-03-27 17:58:42").getTime()), utc_9(new Date("2025-03-27 17:58:42").getTime())], value: 100 },
+
+];
+
+
+
+</script>
+
+</html>
