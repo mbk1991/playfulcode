@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Vis.js Network Example</title>
+    <script type="text/javascript" src="https://unpkg.com/vis-network@9.1.2/dist/vis-network.min.js"></script>
+    <style type="text/css">
+        #network {
+            width: 600px;
+            height: 400px;
+            border: 1px solid lightgray;
+        }
+
+        #topViewBack {
+
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Vis.js Network 예제</h2>
+    <select>
+        <option value="">Location #1</option>
+        <option value="">Location #2</option>
+        <option value="">Location #3</option>
+    </select>
+    <button id="moveRackIcon">Rack 아이콘 이동 토글</button>
+    <button id="registTopView">상면도 등록</button>
+    <button id="addRack">Rack 추가</button>
+    <button id="delRack">Rack 삭제</button>
+    <button id="saveTopo">Rack 토폴로지 저장</button>
+    <button id="sizeUp">+</button>
+    <button id="sizeDown">-</button>
+
+
+    <div id="rackContainer" style="position: relative;">
+        <div id="network" style="position: absolute; z-index: 1;"></div>
+        <div id="topViewBack" style="position: absolute; z-index: 0;"></div>
+    </div>
+
+
+    <script type="text/javascript">
+
+        /**
+         * Rack 추가 이벤트
+        */
+        let offX = 100;
+        let offY = 100;
+        let colCnt = 1;
+        let rowCnt = 1;
+        let maxCol = 6;
+        document.querySelector("#addRack").addEventListener("click", function () {
+            addNode(offX * colCnt, offY * rowCnt);
+            if (colCnt >= maxCol) {
+                rowCnt++;
+                colCnt = 1;
+            } else {
+                colCnt++;
+            }
+            id++;
+        });
+
+        /**
+         * Rack 삭제 이벤트
+        */
+        document.querySelector("#delRack").addEventListener("click", function () {
+            console.log(currRackId);
+            if (currRackId !== -1) {
+                let label = nodes.get(currRackId).label;
+                if (confirm(label + "렉을 삭제?")) {
+                    nodes.remove(currRackId);
+                }
+
+            }
+        });
+
+        /**
+         * Rack 아이콘 이동 토글 
+        */
+        let dragable = false;
+        document.querySelector("#moveRackIcon").addEventListener("click", function () {
+            console.log(dragable);
+            network.setOptions({
+                interaction: {
+                    dragNodes: !dragable // 또는 false
+                }
+            });
+
+            dragable = !dragable;
+
+            if (dragable) {
+                document.querySelector("#moveRackIcon").style.backgroundColor = "red";
+            } else {
+                document.querySelector("#moveRackIcon").style.backgroundColor = "gray";
+            }
+        });
+
+        /**
+         * Rack Node 아이콘 추가
+        */
+        const nodes = new vis.DataSet();
+        let id = 1;
+        let x = -350;
+        let y = -250;
+        function addNode(offX, offY) {
+            nodes.add({
+                id: id,
+                label: 'Rack #' + id,
+                shape: 'image',
+                image: '../resource/img/rack_img.png',
+                fixed: false,
+                x: x + offX,
+                y: y + offY,
+                size: 25,
+                rack_id: 999
+            });
+        };
+
+
+        /**
+         * 상면도 이미지 등록
+        */
+        document.querySelector("#registTopView").addEventListener("click", function () {
+            
+            // const con = document.querySelector("#rackContainer");
+            // const parRect = con.getBoundingClientRect();
+            // let par_height = parRect.height;
+            // let par_width = parRect.width;
+            // let par_top = parRect.top;
+            // let par_left = parRect.left;
+            // console.log(parRect);
+
+            const net = document.querySelector("#network");
+            const netRect = net.getBoundingClientRect();
+            let net_height = netRect.height;
+            let net_width = netRect.width;
+            let net_top = netRect.top;
+            let net_left = netRect.left;
+            console.log(netRect);
+
+            const topoBack = document.querySelector("#topViewBack");
+            topoBack.style.position = 'absolute';
+            topoBack.style.width = `${net_width}px`;
+            topoBack.style.height = `${net_height}px`;
+            topoBack.style.top = net_top;
+            topoBack.style.left = net_left;
+
+            topoBack.style.backgroundImage = "url(../resource/img/topview.png)";
+            topoBack.style.backgroundSize = "cover";
+            topoBack.style.backgroundPosition = "10px 10px";
+            // topoBack.style.backgroundPosition = "center";
+            topoBack.style.backgroundRepeat = "no-repeat";
+            topoBack.style.opacity = "0.5";
+            topoBack.style.zIndex = "0";
+        });
+
+        /**
+         * 사이즈 업
+        */
+        let sizeOff = 5;
+        document.querySelector("#sizeUp").addEventListener("click", function () {
+            if (currRackId !== -1) {
+                let upSize = nodes.get(currRackId).size + sizeOff;
+                nodes.update({ id: currRackId, size: upSize });
+            }
+        });
+
+        /**
+         * 사이즈 다운
+        */
+        document.querySelector("#sizeDown").addEventListener("click", function () {
+            if (currRackId !== -1) {
+                let downSize = nodes.get(currRackId).size - sizeOff;
+                nodes.update({ id: currRackId, size: downSize });
+            }
+        });
+
+
+        /**
+         * Vis.JS 코드
+        */
+        const container = document.getElementById('network');
+        const data = {
+            nodes: nodes,
+        };
+        const options = {
+            physics: {
+                enabled: false
+            },
+            interaction: {
+                dragNodes: false,
+                dragView: false,
+                zoomView: false
+            }
+
+        };
+
+        const network = new vis.Network(container, data, options);
+
+        /**
+         * Vis.JS 노드 클릭 이벤트
+        */
+        var currRackId = -1;
+        network.on("click", function (params) {
+            if (params.nodes.length > 0) {
+                const clickedNodeId = params.nodes[0];
+                console.log(nodes.get(clickedNodeId));
+
+                currRackId = clickedNodeId;
+            }
+        });
+
+
+
+    </script>
+
+</body>
+
+</html>
